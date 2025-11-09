@@ -1,7 +1,8 @@
 // /server.js
 
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+dotenv.config({ path: "./.env" });
+const mongoose = require("mongoose");
 
 // --- UNCAUGHT EXCEPTION HANDLER ---
 // This should be at the very top to catch sync programming errors
@@ -32,7 +33,6 @@ const userRouter = require("./routes/userRoutes");
 const notificationRouter = require("./routes/notificationRoutes");
 
 // --- CONFIGURATIONS ---
-dotenv.config({ path: "./.env" });
 const app = express();
 
 // --- GLOBAL MIDDLEWARE STACK ---
