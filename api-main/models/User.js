@@ -35,11 +35,25 @@ const userSchema = new mongoose.Schema(
         return this.role === "provider";
       },
     },
-    // Add this to userSchema in User.js
     name: {
       type: String,
       required: [true, "Please tell us your name!"],
       trim: true,
+    },
+    serviceCategories: {
+      type: [String], // An array of strings, e.g., ["Gardening", "Plumbing"]
+      required: function () {
+        return this.role === "provider";
+      },
+      default: [],
+    },
+    availabilityStatus: {
+      type: String,
+      enum: ["available", "unavailable"],
+      default: "available",
+      required: function () {
+        return this.role === "provider";
+      },
     },
   },
   { timestamps: true },

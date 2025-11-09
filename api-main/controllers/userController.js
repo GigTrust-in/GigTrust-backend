@@ -1,34 +1,3 @@
-/* const User = require("../models/User");
-
-exports.getMe = async (req, res) => {
-  // The user ID is available from the 'protect' middleware
-  const user = await User.findById(req.user.id);
-  res.status(200).json({
-    status: "success",
-    data: { user },
-  });
-};
-
-exports.updateMe = async (req, res) => {
-  // For now, only allow updating non-sensitive data like name and location
-  const filteredBody = {
-    name: req.body.name,
-    location: req.body.location,
-  };
-
-  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-    new: true,
-    runValidators: true,
-  });
-
-  res.status(200).json({
-    status: "success",
-    data: { user: updatedUser },
-  });
-}; */
-
-// /controllers/userController.js
-
 const User = require("../models/User");
 
 // Middleware to get the current user's ID and attach it to the request
@@ -68,8 +37,16 @@ exports.updateMe = async (req, res) => {
     const filteredBody = {
       name: req.body.name,
       location: req.body.location,
-      email: req.body.email,
+      serviceCategories: req.body.serviceCategories,
+      availabilityStatus: req.body.availabilityStatus,
     };
+
+    // Remove any fields that were not provided in the request
+    Object.keys(filteredBody).forEach((key) => {
+      if (filteredBody[key] === undefined) {
+        delete filteredBody[key];
+      }
+    });
 
     // 2) Update user document
     const updatedUser = await User.findByIdAndUpdate(

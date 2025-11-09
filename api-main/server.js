@@ -1,95 +1,100 @@
-// --- 1. Import Dependencies ---
+// /server.js
+
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+
+// --- UNCAUGHT EXCEPTION HANDLER ---
+// This should be at the very top to catch sync programming errors
+process.on("uncaughtException", (err) => {
+  console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+// --- DEPENDENCY IMPORTS ---
 const express = require("express");
 const cors = require("cors");
 
-// --- 2. Load Environment Variables ---
-// This line loads the variables from your .env file (e.g., PORT, MONGO_URI)
-dotenv.config({ path: "./.env" });
-
-// --- 3. Import Route Handlers ---
-const authRouter = require("./routes/authRoutes");
-const jobRouter = require("./routes/jobRoutes");
-const userRouter = require("./routes/userRoutes");
-
-// --- 4. Initialize Express Application ---
-const app = express();
-
-// --- 5. Apply Global Middleware ---
-// Enable Cross-Origin Resource Sharing (CORS) to allow your frontend to communicate with this backend
-app.use(cors());
-
-// Enable the server to accept and parse JSON in request bodies
-app.use(express.json());
-
-// For security purposes
+// Security Middleware
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const xss = require("xss-clean");
 const rateLimit = require("express-rate-limit");
 
-// Set security HTTP headers
+// Custom Utilities & Routers
+const AppError = require("./utils/appError");
+const globalErrorHandler = require("./controllers/errorController");
+const authRouter = require("./routes/authRoutes");
+const jobRouter = require("./routes/jobRoutes");
+const userRouter = require("./routes/userRoutes");
+
+// Notification
+const notificationRouter = require("./routes/notificationRoutes");
+
+// --- CONFIGURATIONS ---
+dotenv.config({ path: "./.env" });
+const app = express();
+
+// --- GLOBAL MIDDLEWARE STACK ---
+// 1) Set security HTTP headers
 app.use(helmet());
 
-// Limit requests from same API
+// 2) Enable Cross-Origin Resource Sharing
+app.use(cors());
+
+// 3) Rate Limiting to prevent brute-force and DoS attacks
 const limiter = rateLimit({
-  max: 100, // 100 requests
-  windowMs: 60 * 60 * 1000, // per hour
-  message: "Too many requests from this IP, please try again in an hour!",
+  max: 100, // Max 100 requests per IP in the window
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  message:
+    "Too many requests from this IP address, please try again in an hour!",
 });
 app.use("/api", limiter); // Apply limiter to all routes starting with /api
 
-// Data sanitization against NoSQL query injection
+// 4) Body parser middleware: reading data from body into req.body
+app.use(express.json({ limit: "10kb" })); // Limit body size to 10kb
+
+// 5) Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
-// Data sanitization against XSS
+// 6) Data sanitization against Cross-Site Scripting (XSS)
 app.use(xss());
 
-// --- 6. Mount API Routes ---
+// --- ROUTE MOUNTING ---
+app.get("/", (req, res) => res.status(200).send("GigTrust API is running..."));
+app.use("/api/v1/users", authRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/jobs", jobRouter);
+app.use("/api/v1/notifications", notificationRouter);
 
-// ** NEW: Add a root route for health checks **
-// This will respond to GET requests to the base URL (e.g., http://localhost:3001/)
-app.get("/", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "Welcome to the GigTrust API! The server is running.",
-  });
+// --- UNHANDLED ROUTE HANDLER ---
+// This runs for any request that didn't match a route above
+app.all("*", (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Any request to '/api/v1/users' will be handled by the authRouter
-app.use("/api/v1/users", authRouter);
+// --- GLOBAL ERROR HANDLING MIDDLEWARE ---
+// All operational errors end up here
+app.use(globalErrorHandler);
 
-// Any request to '/api/v1/jobs' will be handled by the jobRouter
-app.use("/api/v1/jobs", jobRouter);
-
-// Any request to '/api/v1/users' will be handled by the userRouter
-app.use("/api/v1/users", userRouter);
-
-// --- 7. Connect to the Database ---
+// --- DATABASE CONNECTION ---
 const DB = process.env.MONGO_URI;
-
 mongoose.connect(DB).then(() => {
-  // This message will be logged if the connection is successful
   console.log("✅ DB connection successful!");
 });
 
-// --- 8. Start the Server ---
-// Get the port from environment variables, or use 3000 as a default
+// --- START SERVER ---
 const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-  // This message will be logged once the server is running and ready to accept requests
+const server = app.listen(port, () => {
   console.log(`🚀 App running on port ${port}...`);
 });
 
-// Global Error Handling Middleware
-app.use((err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || "error";
-
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message,
+// --- UNHANDLED PROMISE REJECTION HANDLER ---
+// Catches errors from async code that were not handled (e.g., DB connection fails)
+process.on("unhandledRejection", (err) => {
+  console.log("UNHANDLED REJECTION! 💥 Shutting down...");
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
   });
 });

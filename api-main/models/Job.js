@@ -42,6 +42,14 @@ const jobSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "refunded"],
+      default: "unpaid",
+    },
+    paymentTransactionId: {
+      type: String,
+    },
   },
   { timestamps: true },
 );
