@@ -4,6 +4,17 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "./.env" });
 const mongoose = require("mongoose");
 
+// --- START OF NEW DIAGNOSTIC BLOCK ---
+console.log("--- DIAGNOSING RENDER ENVIRONMENT VARIABLES ---");
+console.log("Value of process.env.PORT:", process.env.PORT);
+console.log("Value of process.env.MONGO_URI:", process.env.MONGO_URI);
+console.log(
+  "Value of process.env.JWT_SECRET:",
+  process.env.JWT_SECRET ? "Exists" : "Not Found or Empty",
+);
+console.log("-------------------------------------------");
+// --- END OF NEW DIAGNOSTIC BLOCK ---
+
 // --- UNCAUGHT EXCEPTION HANDLER ---
 // This should be at the very top to catch sync programming errors
 process.on("uncaughtException", (err) => {
