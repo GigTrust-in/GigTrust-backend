@@ -20,6 +20,9 @@ router.get("/me", userController.getMe, userController.getUser);
 // Route for the user to update their own profile info
 router.patch("/updateMe", userController.updateMe);
 
+// Route for the user to update their FCM token
+router.patch("/fcm-token", userController.updateFcmToken);
+
 // Example of a more generic route you could add later
 router.get("/:id", userController.getUser);
 

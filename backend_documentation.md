@@ -22,6 +22,8 @@ All endpoints except `/auth/*` require a Bearer Token in the Authorization heade
 - **GET /users/me**: Get current user profile.
 - **PATCH /users/updateMe**: Update profile.
   - Body: `name`, `location`, `skills` (array), `hourlyRate`, `bio`, `phoneNumber`, `available` (boolean).
+- **PATCH /users/fcm-token**: Register/update FCM token for push notifications.
+  - Body: `fcmToken` (string)
 - **GET /users/:id**: Get public profile of a user.
 - **GET /users/:userId/reviews**: Get reviews for a user.
 

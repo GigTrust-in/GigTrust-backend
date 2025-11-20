@@ -43,8 +43,14 @@ const userRouter = require("./routes/userRoutes");
 // Notification
 const notificationRouter = require("./routes/notificationRoutes");
 
+// FCM Service
+const fcmService = require("./utils/fcmService");
+
 // --- CONFIGURATIONS ---
 const app = express();
+
+// Initialize FCM
+fcmService.initializeFCM();
 
 // --- GLOBAL MIDDLEWARE STACK ---
 // 1) Set security HTTP headers

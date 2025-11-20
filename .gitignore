@@ -2,3 +2,4 @@ api-main/node_modules
 api-main/.env
 onchain-service/target
 *.env
+/api-main/config/*.json
