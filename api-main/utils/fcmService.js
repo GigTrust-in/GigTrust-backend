@@ -69,13 +69,19 @@ exports.sendPushNotification = async (fcmToken, title, body, data = {}) => {
     }
 
     try {
+        // Ensure all data values are strings as required by FCM
+        const stringData = {};
+        Object.entries(data).forEach(([key, value]) => {
+            // Convert undefined/null to empty string, otherwise to string
+            stringData[key] = value === undefined || value === null ? '' : String(value);
+        });
         const message = {
             notification: {
                 title,
                 body,
             },
             data: {
-                ...data,
+                ...stringData,
                 timestamp: new Date().toISOString(),
             },
             token: fcmToken,
