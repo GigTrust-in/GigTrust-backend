@@ -39,6 +39,11 @@ exports.updateMe = async (req, res) => {
       location: req.body.location,
       serviceCategories: req.body.serviceCategories,
       availabilityStatus: req.body.availabilityStatus,
+      available: req.body.available,
+      skills: req.body.skills,
+      hourlyRate: req.body.hourlyRate,
+      bio: req.body.bio,
+      phoneNumber: req.body.phoneNumber,
     };
 
     // Remove any fields that were not provided in the request

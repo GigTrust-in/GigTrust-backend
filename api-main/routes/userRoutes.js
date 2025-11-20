@@ -23,4 +23,8 @@ router.patch("/updateMe", userController.updateMe);
 // Example of a more generic route you could add later
 router.get("/:id", userController.getUser);
 
+// Nested reviews
+const reviewRouter = require("./reviewRoutes");
+router.use("/:userId/reviews", reviewRouter);
+
 module.exports = router;

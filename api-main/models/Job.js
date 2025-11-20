@@ -28,8 +28,11 @@ const jobSchema = new mongoose.Schema(
     },
     jobStatus: {
       type: String,
-      enum: ["open", "accepted", "completed", "cancelled"],
+      enum: ["open", "assigned", "accepted", "completed", "revision_requested", "cancelled"],
       default: "open",
+    },
+    feedback: {
+      type: String, // For revision requests
     },
     requester: {
       type: mongoose.Schema.ObjectId,

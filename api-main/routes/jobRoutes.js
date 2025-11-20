@@ -38,4 +38,9 @@ router.patch(
   jobController.fundJobEscrow,
 );
 
+router.patch("/:id/assign", restrictTo("requester"), jobController.assignWorker);
+router.patch("/:id/request-revision", restrictTo("requester"), jobController.requestRevision);
+router.patch("/:id/cancel", restrictTo("requester"), jobController.cancelJob);
+router.patch("/:id/unassign", restrictTo("provider"), jobController.unassignJob);
+
 module.exports = router;

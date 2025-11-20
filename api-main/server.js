@@ -73,10 +73,17 @@ app.use(xss());
 
 // --- ROUTE MOUNTING ---
 app.get("/", (req, res) => res.status(200).send("GigTrust API is running..."));
-app.use("/api/v1/users", authRouter);
+
+const reviewRouter = require("./routes/reviewRoutes");
+const transactionRouter = require("./routes/transactionRoutes");
+
+// 3) ROUTES
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/jobs", jobRouter);
 app.use("/api/v1/notifications", notificationRouter);
+app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/transactions", transactionRouter);
 
 // --- UNHANDLED ROUTE HANDLER ---
 // This runs for any request that didn't match a route above

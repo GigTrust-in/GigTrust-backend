@@ -285,7 +285,6 @@ exports.fundJobEscrow = catchAsync(async (req, res, next) => {
     console.log(
       `ON-CHAIN SIM: Funding escrow for job ${job._id} with ${job.payment} INR.`,
     );
-
     res.status(200).json({
       status: "success",
       message: "Payment successful and escrow has been funded.",
@@ -294,4 +293,111 @@ exports.fundJobEscrow = catchAsync(async (req, res, next) => {
   } else {
     return next(new AppError("Payment failed. Please try again.", 400));
   }
+});
+
+// Requester: Assign a worker to a job
+exports.assignWorker = catchAsync(async (req, res, next) => {
+  const job = await Job.findOne({ _id: req.params.id, requester: req.user.id });
+
+  if (!job) {
+    return next(new AppError("Job not found or you are not the requester.", 404));
+  }
+
+  if (job.jobStatus !== "open") {
+    return next(new AppError("Job is not open for assignment.", 400));
+  }
+
+  const workerId = req.body.workerId;
+  if (!workerId) {
+    return next(new AppError("Please provide a workerId.", 400));
+  }
+
+  job.provider = workerId;
+  job.jobStatus = "assigned"; // Or "accepted" if auto-accept? Requirement says "Assigned"
+  await job.save();
+
+  // Notify worker
+  await createNotification(workerId, `You have been assigned to job "${job.jobType}"`, job._id);
+
+  res.status(200).json({
+    status: "success",
+    data: { job },
+  });
+});
+
+// Requester: Request revision
+exports.requestRevision = catchAsync(async (req, res, next) => {
+  const job = await Job.findOne({ _id: req.params.id, requester: req.user.id });
+
+  if (!job) {
+    return next(new AppError("Job not found or you are not the requester.", 404));
+  }
+
+  if (job.jobStatus !== "completed" && job.jobStatus !== "revision_requested") {
+    // Allow requesting revision if it was completed.
+    // Also allow updating feedback if already requested?
+    // Requirement says "Updates job status back to Assigned or a specific RevisionRequested state"
+    // Let's use revision_requested
+  }
+
+  // Ideally should be in "completed" state to request revision? 
+  // Or maybe "assigned" if they want to give early feedback?
+  // Let's assume it's after completion for now, or if the user wants to push it back.
+
+  job.jobStatus = "revision_requested";
+  job.feedback = req.body.feedback;
+  await job.save();
+
+  // Notify worker
+  await createNotification(job.provider, `Revision requested for job "${job.jobType}": ${req.body.feedback}`, job._id);
+
+  res.status(200).json({
+    status: "success",
+    data: { job },
+  });
+});
+
+// Worker: Unassign/Cancel
+exports.unassignJob = catchAsync(async (req, res, next) => {
+  // Worker cancelling assignment
+  const job = await Job.findOne({ _id: req.params.id, provider: req.user.id });
+
+  if (!job) {
+    return next(new AppError("Job not found or you are not the provider.", 404));
+  }
+
+  job.provider = null;
+  job.jobStatus = "open";
+  await job.save();
+
+  // Notify requester
+  await createNotification(job.requester, `Worker cancelled assignment for job "${job.jobType}"`, job._id);
+
+  res.status(200).json({
+    status: "success",
+    message: "You have unassigned yourself from the job.",
+    data: { job },
+  });
+});
+
+// Requester: Cancel Job
+exports.cancelJob = catchAsync(async (req, res, next) => {
+  const job = await Job.findOne({ _id: req.params.id, requester: req.user.id });
+
+  if (!job) {
+    return next(new AppError("Job not found or you are not the requester.", 404));
+  }
+
+  job.jobStatus = "cancelled";
+  await job.save();
+
+  if (job.provider) {
+    await createNotification(job.provider, `Job "${job.jobType}" has been cancelled by the requester.`, job._id);
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Job cancelled.",
+    data: { job },
+  });
 });

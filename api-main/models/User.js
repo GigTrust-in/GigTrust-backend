@@ -55,6 +55,26 @@ const userSchema = new mongoose.Schema(
         return this.role === "provider";
       },
     },
+    // New fields
+    available: {
+      type: Boolean,
+      default: true,
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
+    hourlyRate: {
+      type: Number,
+    },
+    bio: {
+      type: String,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true },
 );
