@@ -103,12 +103,7 @@ exports.getAvailableJobs = async (req, res) => {
       jobType: { $in: provider.serviceCategories }
     });
 
-    const jobs = await Job.find({
-      location: provider.location,
-      minReputation: { $lte: provider.reputation },
-      jobStatus: "open",
-      jobType: { $in: provider.serviceCategories },
-    }).populate("requester", "email name");
+    const jobs = await Job.find({}).populate("requester", "email name");
 
     console.log(`Found ${jobs.length} matching job(s)`);
 
